@@ -1,5 +1,24 @@
 <?php
 
+$envFile = __DIR__ . '/.env';
+if (is_readable($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') {
+            continue;
+        }
+        if (strpos($line, '=') === false) {
+            continue;
+        }
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value, " \t\"'");
+        if ($key !== '' && getenv($key) === false) {
+            putenv("$key=$value");
+        }
+    }
+}
+
 $servers = [
     // ["host" => "195.62.32.215", "user" => "root", "pass" => "wang"],
     // ["host" => "192.142.30.130", "user" => "root", "pass" => "wang"],
@@ -13,8 +32,8 @@ $command = 'bash -lc "cd /home/xui && git stash && git stash clear && git clean 
 
 $logFile = "/home/webhook/xui_repo_worker/".date('Y-m-d H-i-s').".log";
 
-$telegramBotToken = '8397365240:AAH0WJUtjR5jW468MSTBr8hKhzbeZvQxOwA';
-$telegramChatId = '6374530007'; // Your Telegram chat ID (message the bot, then call getUpdates)
+$telegramBotToken = getenv('TG_BOT_TOKEN');
+$telegramChatId = getenv('TG_BOT_CHAT_ID');
 
 // Files/folders to delete in xui_lb
 $removePaths = [

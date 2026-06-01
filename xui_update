@@ -9,6 +9,7 @@ INSTALL_DIR="/home/xui/bin/install"
 
 mkdir -p "$WORKDIR"
 mkdir -p "$INSTALL_DIR"
+trap 'rm -rf "$WORKDIR"' EXIT
 
 echo "[+] Downloading package..."
 curl -L -o "$WORKDIR/installer.tar.gz" "$URL"
@@ -40,6 +41,9 @@ rsync -av \
     "$WORKDIR/main/" \
     "$TARGET/" | tee "$RSYNC_LOG"
 
+echo "[+] Fixing ownership..."
+chown xui:xui "$TARGET"
+
 echo
 echo "[+] Copying tar.gz files to $INSTALL_DIR"
 
@@ -47,18 +51,15 @@ find "$WORKDIR" -type f -name "*.tar.gz" -exec cp -f {} "$INSTALL_DIR/" \;
 
 echo
 echo "[+] Updated files:"
-grep '^>f' "$RSYNC_LOG" | awk '{print $2}'
+grep '^>f' "$RSYNC_LOG" | awk '{print $2}' || true
 
 echo
 echo "[+] New directories:"
-grep '^cd' "$RSYNC_LOG" | awk '{print $2}'
+grep '^cd' "$RSYNC_LOG" | awk '{print $2}' || true
 
 echo
 echo "[+] Stored archives:"
 find "$INSTALL_DIR" -maxdepth 1 -name "*.tar.gz" -printf '%f\n'
 
 echo
-echo "[+] Cleaning up..."
-rm -rf "$WORKDIR"
-
 echo "[+] Update completed successfully."
