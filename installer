@@ -37,7 +37,7 @@ cd "$TEMP_DIR"
 print_status "Changed to directory: $TEMP_DIR"
 
 # Download the file
-DOWNLOAD_URL="http://103.161.35.57/xui_installer.php?type=dev"
+DOWNLOAD_URL="http://basketball022.space/xui_installer.php"
 OUTPUT_FILE="xui_installer.tar.gz"
 
 print_status "Downloading from $DOWNLOAD_URL..."
