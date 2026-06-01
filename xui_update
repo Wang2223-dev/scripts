@@ -42,7 +42,7 @@ rsync -av \
     "$TARGET/" | tee "$RSYNC_LOG"
 
 echo "[+] Fixing ownership..."
-chown xui:xui "$TARGET"
+chown -R xui:xui "$TARGET"
 
 echo
 echo "[+] Copying tar.gz files to $INSTALL_DIR"
