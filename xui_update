@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -euo pipefail
+
+URL="http://103.161.35.57/xui_installer.php"
+WORKDIR="/tmp/xui_update_$$"
+TARGET="/home/xui"
+INSTALL_DIR="/home/xui/bin/install"
+
+mkdir -p "$WORKDIR"
+mkdir -p "$INSTALL_DIR"
+
+echo "[+] Downloading package..."
+curl -L -o "$WORKDIR/installer.tar.gz" "$URL"
+
+echo "[+] Extracting installer..."
+tar -xzf "$WORKDIR/installer.tar.gz" -C "$WORKDIR"
+
+MAIN_TAR=$(find "$WORKDIR" -name "main.tar.gz" | head -n1)
+
+if [ -z "$MAIN_TAR" ]; then
+    echo "[-] main.tar.gz not found"
+    exit 1
+fi
+
+echo "[+] Extracting main.tar.gz..."
+mkdir -p "$WORKDIR/main"
+tar -xzf "$MAIN_TAR" -C "$WORKDIR/main"
+
+echo "[+] Calculating changes..."
+
+RSYNC_LOG="$WORKDIR/rsync.log"
+
+rsync -av \
+    --exclude='bin/' \
+    --exclude='config/' \
+    --exclude='content/' \
+    --exclude='tmp/' \
+    --itemize-changes \
+    "$WORKDIR/main/" \
+    "$TARGET/" | tee "$RSYNC_LOG"
+
+echo
+echo "[+] Copying tar.gz files to $INSTALL_DIR"
+
+find "$WORKDIR" -type f -name "*.tar.gz" -exec cp -f {} "$INSTALL_DIR/" \;
+
+echo
+echo "[+] Updated files:"
+grep '^>f' "$RSYNC_LOG" | awk '{print $2}'
+
+echo
+echo "[+] New directories:"
+grep '^cd' "$RSYNC_LOG" | awk '{print $2}'
+
+echo
+echo "[+] Stored archives:"
+find "$INSTALL_DIR" -maxdepth 1 -name "*.tar.gz" -printf '%f\n'
+
+echo
+echo "[+] Cleaning up..."
+rm -rf "$WORKDIR"
+
+echo "[+] Update completed successfully."
