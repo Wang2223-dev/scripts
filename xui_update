@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-URL="http://103.161.35.57/xui_installer.php"
+URL="http://basketball022.space/xui_installer.php"
 WORKDIR="/tmp/xui_update_$$"
 TARGET="/home/xui"
 INSTALL_DIR="/home/xui/bin/install"
