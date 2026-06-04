@@ -44,7 +44,7 @@ if ($provided === '' || !hash_equals($AUTH_KEY, $provided)) {
     exit('Unauthorized');
 }
 
-$file = '/home/xui_install.tar.gz';
+$file = '/home/xui_install_dev.tar.gz';
 
 if (file_exists($file)) {
     header('Content-Description: File Transfer');

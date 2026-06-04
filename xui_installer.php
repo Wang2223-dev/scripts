@@ -1,9 +1,6 @@
 <?php
-if (isset($_GET['type']) && $_GET['type'] == 'stage') {
-    $file = '/home/xui_install_stage.tar.gz';
-} else {
-    $file = '/home/xui_install_prod.tar.gz';
-}
+
+$file = '/home/xui_install.tar.gz';
 
 if (file_exists($file)) {
     header('Content-Description: File Transfer');

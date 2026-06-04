@@ -8,24 +8,15 @@ function logMessage($message, $logFile) {
 }
 
 logMessage("=== START EXECUTION ===", $logFile);
-// 'rm -rf /home/xds_encoded && ' .
-// '/home/ioncube/ioncube_encoder.sh -74 /home/xds -o /home/xds_encoded --copy "vendor/" && ' .
-// '/home/xds_encoded/build/build.sh && ' .
-// 'mv -f /home/xds_encoded/build/xds.tar.gz /home/xds.tar.gz && ' .
-// 'rm -rf /home/xds_encoded'
 
 $deployCommand = 'bash -lc ' . escapeshellarg(
     'set -e && ' .
     'cd /home/xui_installer && git pull && ' .
-    'cp -R ./install /home/xui_install/ && ' .
-    'cp -R ./install /home/xui_install_stage/ && ' .
-    'cp -R ./install /home/xui_install_prod/ && ' .
-    'cp -R ./database.sql /home/xui_install/ && ' .
-    'cp -R ./database.sql /home/xui_install_stage/ && ' .
-    'cp -R ./database.sql /home/xui_install_prod/ && ' .
+    'cp -R ./install /home/build/ && ' .
+    'cp -R ./database.sql /home/build/ && ' .
     'cd /home/xds && git pull origin main && ' .
     '/home/xds/build/build.sh && ' .
-    'mv -f /home/xds/build/xds.tar.gz /home/xds.tar.gz'
+    'mv -f /home/xds/build/xds.tar.gz /home/build/xds.tar.gz'
 );
 
 exec($deployCommand . ' 2>&1', $output, $returnCode);
@@ -46,6 +37,11 @@ logMessage("=== DEPLOY COMPLETED ===", $logFile);
  */
 exec("pkill -f '/home/webhook/xui_repo_worker.php' 2>/dev/null", $pkillOut, $pkillCode);
 logMessage("pkill xui_repo_worker (code: $pkillCode)", $logFile);
+
+sleep(1);
+
+exec("rm -rf /home/webhook/xui_repo/* /home/webhook/xui_installer_and_xds_repo_worker/* /home/webhook/xui_installer_and_xds_repo/* /home/webhook/xui_repo_worker/* 2>/dev/null", $pRemoveOut, $pRemoveCode);
+logMessage("pkill xui_repo_worker (code: $pRemoveCode)", $logFile);
 
 sleep(1);
 

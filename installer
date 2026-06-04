@@ -75,6 +75,94 @@ fi
 
 print_status "Extraction completed"
 
+# Build db.tar.gz and loadbalancer.tar.gz from main.tar.gz (same paths as xui_repo_worker).
+if [ ! -f "main.tar.gz" ]; then
+    print_error "main.tar.gz not found after extraction"
+    exit 1
+fi
+
+LOADBALANCER_REMOVES=(
+    'bin/install/*.tar.gz'
+    'admin'
+    'includes/cli/cache_handler.php'
+    'includes/pages'
+    'includes/js'
+    'includes/lang'
+    'includes/styles'
+    'crons/backups.php'
+    'crons/cache_engine.php'
+    'crons/epg.php'
+    'crons/plex.php'
+    'crons/providers.php'
+    'crons/root_mysql.php'
+    'crons/series.php'
+    'crons/tmdb.php'
+    'crons/tmdb_popular.php'
+    'www/streams/auth.php'
+    'www/playlist.php'
+    'reseller'
+    'player'
+    'ministra'
+    'tools'
+    'log.txt'
+)
+
+DB_REMOVES=(
+    'bin/install/*.tar.gz'
+    'admin'
+    'includes/cli/cache_handler.php'
+    'includes/pages'
+    'includes/js'
+    'includes/lang'
+    'includes/styles'
+    'crons/cache_engine.php'
+    'www/streams'
+    'www/api.php'
+    'www/enigma2.php'
+    'www/epg.php'
+    'www/player_api.php'
+    'www/playlist.php'
+    'www/probe.php'
+    'www/progress.php'
+    'www/xplugin.php'
+    'reseller'
+    'player'
+    'tools'
+    'ministra'
+    'log.txt'
+)
+
+build_variant_tarball() {
+    local output_tgz="$1"
+    shift
+    local removes=("$@")
+    local work path
+
+    work=$(mktemp -d)
+    tar -xzf "main.tar.gz" -C "$work"
+
+    shopt -s nullglob
+    for path in "${removes[@]}"; do
+        if [[ "$path" == *'*'* ]]; then
+            rm -f $work/$path 2>/dev/null || true
+        else
+            rm -rf "$work/$path"
+        fi
+    done
+    shopt -u nullglob
+
+    tar -czf "$output_tgz" -C "$work" .
+    rm -rf "$work"
+}
+
+print_status "Building loadbalancer.tar.gz from main.tar.gz..."
+build_variant_tarball "loadbalancer.tar.gz" "${LOADBALANCER_REMOVES[@]}"
+
+print_status "Building db.tar.gz from main.tar.gz..."
+build_variant_tarball "db.tar.gz" "${DB_REMOVES[@]}"
+
+print_status "db.tar.gz and loadbalancer.tar.gz built from main.tar.gz"
+
 # Find the extracted install script
 # Look for common script names
 INSTALL_SCRIPT=""
