@@ -213,15 +213,8 @@ else
     exit $INSTALL_EXIT_CODE
 fi
 
-# Optionally clean up temporary files
-read -p "Do you want to delete temporary files? (y/n): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cd /
-    rm -rf "$TEMP_DIR"
-    print_status "Temporary files deleted"
-else
-    print_status "Temporary files kept at: $TEMP_DIR"
-fi
+cd /
+rm -rf "$TEMP_DIR"
+print_status "Temporary files deleted"
 
 print_status "Done!"

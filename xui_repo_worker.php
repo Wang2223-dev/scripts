@@ -74,57 +74,77 @@ $telegramChatId = getenv('TG_BOT_CHAT_ID');
 
 sendTelegramMessage('Building started...', $telegramBotToken, $telegramChatId, $logFile);
 
-// // Files/folders to delete in xui_lb
-// $removePaths = [
-//     'bin/install/*.tar.gz',
-//     'admin',
-//     'includes/cli/cache_handler.php',
-//     'includes/pages',
-//     'includes/js',
-//     'includes/lang',
-//     'includes/styles',
-//     'crons/backups.php',
-//     'crons/cache_engine.php',
-//     'crons/epg.php',
-//     'crons/plex.php',
-//     'crons/providers.php',
-//     'crons/root_mysql.php',
-//     'crons/series.php',
-//     'crons/tmdb.php',
-//     'crons/tmdb_popular.php',
-//     'www/streams/auth.php',
-//     'www/playlist.php',
-//     'reseller',
-//     'player',
-//     'ministra',
-//     'tools',
-//     'log.txt',
-// ];
-// // Files/folders to delete in xui_db
-// $removePaths1 = [
-//     'bin/install/*.tar.gz',
-//     'admin',
-//     'includes/cli/cache_handler.php',
-//     'includes/pages',
-//     'includes/js',
-//     'includes/lang',
-//     'includes/styles',
-//     'crons/cache_engine.php',
-//     'www/streams',
-//     'www/api.php',
-//     'www/enigma2.php',
-//     'www/epg.php',
-//     'www/player_api.php',
-//     'www/playlist.php',
-//     'www/probe.php',
-//     'www/progress.php',
-//     'www/xplugin.php',
-//     'reseller',
-//     'player',
-//     'tools',
-//     'ministra',
-//     'log.txt',
-// ];
+function buildDeleteCmd(array $paths): string {
+    $rmRf = [];
+    $rmF = [];
+    foreach ($paths as $path) {
+        if (strpos($path, '*') !== false) {
+            $rmF[] = escapeshellarg($path);
+        } else {
+            $rmRf[] = escapeshellarg($path);
+        }
+    }
+    $parts = [];
+    if ($rmRf) {
+        $parts[] = 'sudo rm -rf ' . implode(' ', $rmRf);
+    }
+    if ($rmF) {
+        $parts[] = 'sudo rm -f ' . implode(' ', $rmF);
+    }
+    return implode(' && ', $parts);
+}
+
+// Files/folders to remove in lb_sk (loadbalancer branch)
+$removePaths = [
+    'bin/install/*.tar.gz',
+    'admin',
+    'includes/cli/cache_handler.php',
+    'includes/pages',
+    'includes/js',
+    'includes/lang',
+    'includes/styles',
+    'crons/backups.php',
+    'crons/cache_engine.php',
+    'crons/epg.php',
+    'crons/plex.php',
+    'crons/providers.php',
+    'crons/root_mysql.php',
+    'crons/series.php',
+    'crons/tmdb.php',
+    'crons/tmdb_popular.php',
+    'www/streams/auth.php',
+    'www/playlist.php',
+    'reseller',
+    'player',
+    'ministra',
+    'tools',
+    'log.txt',
+];
+// Files/folders to remove in db_sk (database branch)
+$removePaths1 = [
+    'bin/install/*.tar.gz',
+    'admin',
+    'includes/cli/cache_handler.php',
+    'includes/pages',
+    'includes/js',
+    'includes/lang',
+    'includes/styles',
+    'crons/cache_engine.php',
+    'www/streams',
+    'www/api.php',
+    'www/enigma2.php',
+    'www/epg.php',
+    'www/player_api.php',
+    'www/playlist.php',
+    'www/probe.php',
+    'www/progress.php',
+    'www/xplugin.php',
+    'reseller',
+    'player',
+    'tools',
+    'ministra',
+    'log.txt',
+];
 
 
 
@@ -133,13 +153,29 @@ logMessage("=== START EXECUTION ===", $logFile);
 logMessage("=== RUNNING PRE-COMMAND ===", $logFile);
 
 // Build delete command safely
-// $deleteCmd = 'sudo rm -rf ' . implode(' ', array_map('escapeshellarg', $removePaths));
-// $deleteCmd1 = 'sudo rm -rf ' . implode(' ', array_map('escapeshellarg', $removePaths1));
- 
+$deleteCmd = buildDeleteCmd($removePaths);
+$deleteCmd1 = buildDeleteCmd($removePaths1);
+$commitMsg = date('Y-m-d-H-i-s');
+
 $preCommand = "
 cd /home/xui && \
+sudo git fetch --all && \
 sudo git checkout ubuntu20 && \
 sudo git pull && \
+if [ ! -d /home/xui_lb/.git ]; then sudo git worktree add /home/xui_lb lb_sk; fi && \
+if [ ! -d /home/xui_db/.git ]; then sudo git worktree add /home/xui_db db_sk; fi && \
+sudo rsync -a --delete --filter='protect .git/' --exclude='.git' --exclude='bin/install/*.tar.gz' /home/xui/ /home/xui_lb/ && \
+sudo rsync -a --delete --filter='protect .git/' --exclude='.git' --exclude='bin/install/*.tar.gz' /home/xui/ /home/xui_db/ && \
+cd /home/xui_lb && \
+sudo $deleteCmd && \
+sudo git add -A && \
+(sudo git diff --cached --quiet || sudo git commit -m '$commitMsg') && \
+sudo git push origin lb_sk && \
+cd /home/xui_db && \
+sudo $deleteCmd1 && \
+sudo git add -A && \
+(sudo git diff --cached --quiet || sudo git commit -m '$commitMsg') && \
+sudo git push origin db_sk
 ";
 
 $mainCommand = <<<'SH'
@@ -171,7 +207,12 @@ stage_main_tree "$STAGE"
 
 tar -czf "$OUT/main_dev.tar.gz" -C "$STAGE" .
 
-"$IONCUBE" -74 "$STAGE" -o "$ENCODED" \
+# Prod encode: separate tree without .git / .gitignore (--ignore is unreliable for .git)
+STAGE_ENCODE="$WORKDIR/stage_encode"
+rsync -a "$STAGE/" "$STAGE_ENCODE/" --exclude='.git'
+rm -f "$STAGE_ENCODE/.gitignore"
+
+"$IONCUBE" -74 "$STAGE_ENCODE" -o "$ENCODED" \
   --copy "bin/" \
   --copy "backups/" \
   --copy "content/" \
@@ -185,9 +226,10 @@ tar -czf "$OUT/main_dev.tar.gz" -C "$STAGE" .
   --copy "includes/python/" \
   --encode "status" \
   --encode "tools" \
-  --ignore "*.sock" \
-  --ignore ".git" \
-  --ignore ".gitignore"
+  --ignore "*.sock"
+
+rm -rf "$ENCODED/.git"
+rm -f "$ENCODED/.gitignore"
 
 tar -czf "$OUT/main.tar.gz" -C "$ENCODED" .
 

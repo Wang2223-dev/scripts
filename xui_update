@@ -131,6 +131,8 @@ echo "[+] Copying tar.gz files to $INSTALL_DIR"
 
 find "$WORKDIR" -type f -name "*.tar.gz" -exec cp -f {} "$INSTALL_DIR/" \;
 
+rm -rf "$INSTALL_DIR/installer.tar.gz"
+
 echo
 echo "[+] Updated files:"
 grep '^>f' "$RSYNC_LOG" | awk '{print $2}' || true
