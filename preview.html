@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Comparator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+    :root{
+        --bg: #0f1419;
+        --surface: #1a2332;
+        --surface-2: #243044;
+        --border: #2d3a4f;
+        --border-light: #3d4f6a;
+        --text: #e7ecf3;
+        --text-muted: #8b9cb3;
+        --text-dim: #5c6b82;
+        --accent: #3b82f6;
+        --accent-hover: #2563eb;
+        --accent-glow: rgba(59,130,246,.25);
+        --green: #22c55e;
+        --green-bg: rgba(34,197,94,.12);
+        --red: #ef4444;
+        --red-bg: rgba(239,68,68,.12);
+        --amber: #f59e0b;
+        --amber-bg: rgba(245,158,11,.12);
+        --radius: 12px;
+        --radius-sm: 8px;
+        --shadow: 0 4px 24px rgba(0,0,0,.35);
+    }
+
+    *{
+        box-sizing: border-box;
+    }
+
+    body{
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Inter", system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text);
+        background:
+            radial-gradient(ellipse at 20% 0%, rgba(59,130,246,.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 100%, rgba(99,102,241,.06) 0%, transparent 50%),
+            var(--bg);
+    }
+
+    .page{
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+    }
+
+    /* Header */
+    .header{
+        margin-bottom: 28px;
+    }
+
+    .header-badge{
+        display: inline-block;
+        padding: 4px 10px;
+        margin-bottom: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--accent);
+        background: var(--accent-glow);
+        border: 1px solid rgba(59,130,246,.3);
+        border-radius: 999px;
+    }
+
+    .header h1{
+        margin: 0 0 8px;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -.02em;
+    }
+
+    .header p{
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 15px;
+    }
+
+    /* Form card */
+    .form-card{
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .url-grid{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px){
+        .url-grid{
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .field label{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .field-label-dot{
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .field-label-dot.api1{ background: #3b82f6; }
+    .field-label-dot.api2{ background: #8b5cf6; }
+
+    .field input{
+        width: 100%;
+        padding: 12px 14px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        outline: none;
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    .field input:focus{
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .field input::placeholder{
+        color: var(--text-dim);
+    }
+
+    /* Samples */
+    .samples{
+        margin-bottom: 20px;
+    }
+
+    .samples-label{
+        display: block;
+        margin-bottom: 10px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-dim);
+    }
+
+    .sample-chips{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .chip{
+        padding: 6px 12px;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all .15s;
+    }
+
+    .chip:hover{
+        color: var(--text);
+        border-color: var(--border-light);
+        background: var(--bg);
+    }
+
+    /* Button */
+    .actions{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .btn-primary{
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        background: var(--accent);
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background .15s, transform .1s;
+    }
+
+    .btn-primary:hover{
+        background: var(--accent-hover);
+    }
+
+    .btn-primary:active{
+        transform: scale(.98);
+    }
+
+    .btn-primary:disabled{
+        opacity: .6;
+        cursor: not-allowed;
+    }
+
+    .btn-primary svg{
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Loading */
+    .loading{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 24px;
+        margin-top: 24px;
+        color: var(--text-muted);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+    }
+
+    .spinner{
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin{
+        to{ transform: rotate(360deg); }
+    }
+
+    /* Results */
+    #result{
+        margin-top: 24px;
+    }
+
+    .summary{
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        border-radius: var(--radius);
+        border: 1px solid transparent;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    .summary-icon{
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 18px;
+    }
+
+    .summary.match{
+        background: var(--green-bg);
+        border-color: rgba(34,197,94,.25);
+        color: #86efac;
+    }
+
+    .summary.match .summary-icon{
+        background: rgba(34,197,94,.2);
+    }
+
+    .summary.partial{
+        background: var(--amber-bg);
+        border-color: rgba(245,158,11,.25);
+        color: #fcd34d;
+    }
+
+    .summary.partial .summary-icon{
+        background: rgba(245,158,11,.2);
+    }
+
+    .summary.mismatch{
+        background: var(--red-bg);
+        border-color: rgba(239,68,68,.25);
+        color: #fca5a5;
+    }
+
+    .summary.mismatch .summary-icon{
+        background: rgba(239,68,68,.2);
+    }
+
+    .section{
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+
+    .section-head{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(0,0,0,.15);
+    }
+
+    .section-head h2{
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -.01em;
+    }
+
+    .section-count{
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-dim);
+        padding: 3px 10px;
+        background: var(--surface-2);
+        border-radius: 999px;
+    }
+
+    .section-body{
+        padding: 16px 20px;
+    }
+
+    .section-body p{
+        margin: 0;
+    }
+
+    .good{ color: var(--green); }
+    .bad{ color: var(--red); }
+    .warn{ color: var(--amber); }
+
+    .hint{
+        color: var(--text-muted);
+        font-size: 13px;
+        margin-top: 8px;
+    }
+
+    /* Tables */
+    .table-wrap{
+        overflow-x: auto;
+        margin: 0 -4px;
+        border-radius: var(--radius-sm);
+    }
+
+    table{
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    th{
+        padding: 10px 14px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: var(--text-dim);
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+
+    td{
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+        color: var(--text);
+    }
+
+    tr:last-child td{
+        border-bottom: none;
+    }
+
+    tr.row-diff td{
+        background: rgba(239,68,68,.04);
+    }
+
+    tr.row-match td{
+        background: rgba(34,197,94,.03);
+    }
+
+    tr:hover td{
+        background: rgba(255,255,255,.02);
+    }
+
+    tr.row-diff:hover td{
+        background: rgba(239,68,68,.07);
+    }
+
+    td:first-child{
+        font-weight: 500;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .mono{
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        word-break: break-all;
+        max-width: 420px;
+    }
+
+    .badge{
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .badge-yes{
+        color: var(--green);
+        background: var(--green-bg);
+    }
+
+    .badge-no{
+        color: var(--red);
+        background: var(--red-bg);
+    }
+
+    .badge-neutral{
+        color: var(--text-muted);
+        background: var(--surface-2);
+    }
+
+    /* Raw pre */
+    pre{
+        overflow: auto;
+        max-height: 400px;
+        margin: 12px 0 0;
+        padding: 16px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        color: #c9d1d9;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    .raw-block h3{
+        margin: 20px 0 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .raw-block h3:first-child{
+        margin-top: 0;
+    }
+
+    /* Empty */
+    .empty-state{
+        text-align: center;
+        padding: 48px 24px;
+        color: var(--text-dim);
+    }
+
+    .empty-state svg{
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+        opacity: .4;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+<header class="header">
+    <span class="header-badge">Dev Tool</span>
+    <h1>API Endpoint Comparator</h1>
+    <p>Compare two API responses — status, headers, structure, and values side by side.</p>
+</header>
+
+<div class="form-card">
+
+    <div class="url-grid">
+        <div class="field">
+            <label for="url1">
+                <span class="field-label-dot api1"></span>
+                API 1
+            </label>
+            <input id="url1" type="url" placeholder="https://api1.example.com/data">
+        </div>
+        <div class="field">
+            <label for="url2">
+                <span class="field-label-dot api2"></span>
+                API 2
+            </label>
+            <input id="url2" type="url" placeholder="https://api2.example.com/data">
+        </div>
+    </div>
+
+    <div class="samples">
+        <span class="samples-label">Quick samples</span>
+        <div class="sample-chips">
+            <button type="button" class="chip" onclick="loadSample('identical')">Identical</button>
+            <button type="button" class="chip" onclick="loadSample('values')">Different values</button>
+            <button type="button" class="chip" onclick="loadSample('structure')">Different structure</button>
+            <button type="button" class="chip" onclick="loadSample('pokeapi')">PokeAPI</button>
+            <button type="button" class="chip" onclick="loadSample('status')">HTTP status</button>
+            <button type="button" class="chip" onclick="loadSample('notjson')">JSON vs HTML</button>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button type="button" class="btn-primary" id="compareBtn" onclick="compareApis()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+            </svg>
+            Compare APIs
+        </button>
+    </div>
+
+</div>
+
+<div id="result">
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p>Enter two URLs above and click Compare to see results.</p>
+    </div>
+</div>
+
+</div>
+
+<script>
+
+const MAX_VALUE_DIFFS = 500;
+const MAX_ARRAY_INDEX_COMPARE = 50;
+
+const SAMPLES = {
+    identical: [
+        "https://jsonplaceholder.typicode.com/users/1",
+        "https://jsonplaceholder.typicode.com/users/1"
+    ],
+    values: [
+        "https://jsonplaceholder.typicode.com/users/1",
+        "https://jsonplaceholder.typicode.com/users/2"
+    ],
+    structure: [
+        "https://jsonplaceholder.typicode.com/users/1",
+        "https://jsonplaceholder.typicode.com/posts/1"
+    ],
+    pokeapi: [
+        "https://pokeapi.co/api/v2/pokemon/1",
+        "https://pokeapi.co/api/v2/pokemon/2"
+    ],
+    status: [
+        "https://httpbin.org/status/200",
+        "https://httpbin.org/status/404"
+    ],
+    notjson: [
+        "https://httpbin.org/json",
+        "https://httpbin.org/html"
+    ]
+};
+
+function loadSample(name){
+    const pair = SAMPLES[name];
+    if(!pair) return;
+    document.getElementById("url1").value = pair[0];
+    document.getElementById("url2").value = pair[1];
+}
+
+function escapeHtml(value){
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;");
+}
+
+function summaryIcon(type){
+    if(type === "match") return "&#10003;";
+    if(type === "partial") return "&#9888;";
+    return "&#10007;";
+}
+
+function yesNoBadge(value){
+    const yes = value === "yes" || value === true;
+    const cls = yes ? "badge-yes" : "badge-no";
+    const label = yes ? "yes" : "no";
+    return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function getDetailedType(value){
+    if(value === null) return "null";
+    if(Array.isArray(value)) return "array";
+    if(typeof value === "number"){
+        if(Number.isNaN(value)) return "number(NaN)";
+        if(!Number.isFinite(value)) return "number(Infinity)";
+        return Number.isInteger(value)
+            ? "number(integer)"
+            : "number(float)";
+    }
+    return typeof value;
+}
+
+function formatValue(value){
+    if(value === undefined) return "(undefined)";
+    if(typeof value === "string") return JSON.stringify(value);
+    return JSON.stringify(value);
+}
+
+function formatBytes(bytes){
+    if(bytes < 1024) return bytes + " B";
+    if(bytes < 1048576)
+        return (bytes/1024).toFixed(2) + " KB";
+    return (bytes/1048576).toFixed(2) + " MB";
+}
+
+function countNodes(value){
+    if(value === null || typeof value !== "object"){
+        return { leaves: 1, objects: 0, arrays: 0, keys: 0 };
+    }
+
+    if(Array.isArray(value)){
+        let stats = {
+            leaves: 0,
+            objects: 0,
+            arrays: 1,
+            keys: value.length
+        };
+
+        value.forEach(item=>{
+            const child = countNodes(item);
+            stats.leaves += child.leaves;
+            stats.objects += child.objects;
+            stats.arrays += child.arrays;
+            stats.keys += child.keys;
+        });
+
+        return stats;
+    }
+
+    const keys = Object.keys(value);
+    let stats = {
+        leaves: 0,
+        objects: 1,
+        arrays: 0,
+        keys: keys.length
+    };
+
+    keys.forEach(key=>{
+        const child = countNodes(value[key]);
+        stats.leaves += child.leaves;
+        stats.objects += child.objects;
+        stats.arrays += child.arrays;
+        stats.keys += child.keys;
+    });
+
+    return stats;
+}
+
+function getMaxDepth(value, depth=0){
+    if(value === null || typeof value !== "object") return depth;
+
+    if(Array.isArray(value)){
+        if(value.length === 0) return depth + 1;
+        return Math.max(
+            ...value.map(item=>getMaxDepth(item, depth + 1))
+        );
+    }
+
+    const keys = Object.keys(value);
+    if(keys.length === 0) return depth + 1;
+
+    return Math.max(
+        ...keys.map(key=>getMaxDepth(value[key], depth + 1))
+    );
+}
+
+async function fetchApi(url, label){
+
+    const start = performance.now();
+    let response;
+    let fetchError = null;
+
+    try{
+        response = await fetch(url);
+    }
+    catch(error){
+        fetchError = error.message || String(error);
+        return {
+            label,
+            url,
+            ok: false,
+            fetchError,
+            status: null,
+            statusText: null,
+            redirected: false,
+            finalUrl: url,
+            contentType: null,
+            responseTime: (performance.now() - start).toFixed(2),
+            size: 0,
+            byteSize: 0,
+            raw: "",
+            json: null,
+            parseError: null,
+            headers: {},
+            isJson: false
+        };
+    }
+
+    const end = performance.now();
+    const text = await response.text();
+    const headers = {};
+
+    response.headers.forEach((value, key)=>{
+        headers[key] = value;
+    });
+
+    let json = null;
+    let parseError = null;
+
+    if(text.trim()){
+        try{
+            json = JSON.parse(text);
+        }
+        catch(error){
+            parseError = error.message || String(error);
+        }
+    }
+    else{
+        parseError = "Empty response body";
+    }
+
+    const encoder = new TextEncoder();
+
+    return {
+        label,
+        url,
+        ok: response.ok,
+        fetchError: null,
+        status: response.status,
+        statusText: response.statusText,
+        redirected: response.redirected,
+        finalUrl: response.url,
+        contentType: response.headers.get("content-type"),
+        responseTime: (end - start).toFixed(2),
+        size: text.length,
+        byteSize: encoder.encode(text).length,
+        raw: text,
+        json,
+        parseError,
+        headers,
+        isJson: json !== null
+    };
+}
+
+function compareStructures(a, b, path="", result=[]){
+
+    const typeA = getDetailedType(a);
+    const typeB = getDetailedType(b);
+    const pathLabel = path || "(root)";
+
+    if(typeA !== typeB){
+        result.push({
+            path: pathLabel,
+            issue: "Type mismatch",
+            api1: typeA,
+            api2: typeB
+        });
+        return result;
+    }
+
+    if(a === null || typeof a !== "object"){
+        return result;
+    }
+
+    if(Array.isArray(a)){
+        if(a.length !== b.length){
+            result.push({
+                path: pathLabel,
+                issue: "Array length mismatch",
+                api1: String(a.length),
+                api2: String(b.length)
+            });
+        }
+
+        const limit = Math.min(
+            Math.max(a.length, b.length),
+            MAX_ARRAY_INDEX_COMPARE
+        );
+
+        for(let i = 0; i < limit; i++){
+            const itemPath = path
+                ? path + "[" + i + "]"
+                : "[" + i + "]";
+
+            if(i >= a.length){
+                result.push({
+                    path: itemPath,
+                    issue: "Missing index in API 1",
+                    api1: "(absent)",
+                    api2: getDetailedType(b[i])
+                });
+                continue;
+            }
+
+            if(i >= b.length){
+                result.push({
+                    path: itemPath,
+                    issue: "Missing index in API 2",
+                    api1: getDetailedType(a[i]),
+                    api2: "(absent)"
+                });
+                continue;
+            }
+
+            compareStructures(a[i], b[i], itemPath, result);
+        }
+
+        if(Math.max(a.length, b.length) > MAX_ARRAY_INDEX_COMPARE){
+            result.push({
+                path: pathLabel,
+                issue: "Array index comparison truncated",
+                api1: "checked first " + MAX_ARRAY_INDEX_COMPARE,
+                api2: "checked first " + MAX_ARRAY_INDEX_COMPARE
+            });
+        }
+
+        return result;
+    }
+
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    const allKeys = new Set([...keysA, ...keysB]);
+
+    allKeys.forEach(key=>{
+        const childPath = path ? path + "." + key : key;
+
+        if(!(key in a)){
+            result.push({
+                path: childPath,
+                issue: "Missing key in API 1",
+                api1: "(absent)",
+                api2: getDetailedType(b[key])
+            });
+            return;
+        }
+
+        if(!(key in b)){
+            result.push({
+                path: childPath,
+                issue: "Missing key in API 2",
+                api1: getDetailedType(a[key]),
+                api2: "(absent)"
+            });
+            return;
+        }
+
+        compareStructures(a[key], b[key], childPath, result);
+    });
+
+    return result;
+}
+
+function valuesEqual(a, b){
+    if(Object.is(a, b)) return true;
+
+    if(
+        a === null || b === null ||
+        typeof a !== "object" || typeof b !== "object"
+    ){
+        return false;
+    }
+
+    return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function compareValues(a, b, path="", result=[]){
+
+    if(valuesEqual(a, b)) return result;
+
+    const typeA = getDetailedType(a);
+    const typeB = getDetailedType(b);
+    const pathLabel = path || "(root)";
+
+    if(typeA !== typeB){
+        result.push({
+            path: pathLabel,
+            value1: a,
+            value2: b,
+            reason: "Different types: " + typeA + " vs " + typeB
+        });
+        return result;
+    }
+
+    if(a === null || typeof a !== "object"){
+        result.push({
+            path: pathLabel,
+            value1: a,
+            value2: b,
+            reason: "Different scalar value"
+        });
+        return result;
+    }
+
+    if(Array.isArray(a)){
+        const limit = Math.min(
+            Math.max(a.length, b.length),
+            MAX_ARRAY_INDEX_COMPARE
+        );
+
+        for(let i = 0; i < limit; i++){
+            const itemPath = path
+                ? path + "[" + i + "]"
+                : "[" + i + "]";
+
+            if(i >= a.length || i >= b.length){
+                result.push({
+                    path: itemPath,
+                    value1: i >= a.length ? "(absent)" : a[i],
+                    value2: i >= b.length ? "(absent)" : b[i],
+                    reason: "Array index only present in one response"
+                });
+                continue;
+            }
+
+            compareValues(a[i], b[i], itemPath, result);
+        }
+
+        return result;
+    }
+
+    const keys = new Set([
+        ...Object.keys(a),
+        ...Object.keys(b)
+    ]);
+
+    keys.forEach(key=>{
+        const childPath = path ? path + "." + key : key;
+        const inA = key in a;
+        const inB = key in b;
+
+        if(!inA || !inB){
+            result.push({
+                path: childPath,
+                value1: inA ? a[key] : "(absent)",
+                value2: inB ? b[key] : "(absent)",
+                reason: "Key only present in one response"
+            });
+            return;
+        }
+
+        compareValues(a[key], b[key], childPath, result);
+    });
+
+    return result;
+}
+
+function compareHeaders(headers1, headers2){
+    const keys = new Set([
+        ...Object.keys(headers1),
+        ...Object.keys(headers2)
+    ]);
+
+    const diffs = [];
+
+    keys.forEach(key=>{
+        const value1 = headers1[key] ?? "(absent)";
+        const value2 = headers2[key] ?? "(absent)";
+
+        if(value1 !== value2){
+            diffs.push({
+                header: key,
+                api1: value1,
+                api2: value2
+            });
+        }
+    });
+
+    return diffs.sort((a,b)=>a.header.localeCompare(b.header));
+}
+
+function compareRawText(text1, text2){
+    if(text1 === text2){
+        return {
+            identical: true,
+            normalizedIdentical: true,
+            lengthDelta: 0,
+            firstDiffIndex: null
+        };
+    }
+
+    const normalized1 = text1.replace(/\r\n/g,"\n").trim();
+    const normalized2 = text2.replace(/\r\n/g,"\n").trim();
+
+    let firstDiffIndex = null;
+
+    const maxLen = Math.max(text1.length, text2.length);
+    for(let i = 0; i < maxLen; i++){
+        if(text1[i] !== text2[i]){
+            firstDiffIndex = i;
+            break;
+        }
+    }
+
+    return {
+        identical: false,
+        normalizedIdentical: normalized1 === normalized2,
+        lengthDelta: text2.length - text1.length,
+        firstDiffIndex
+    };
+}
+
+function renderSection(title, count, body){
+    const countHtml = count !== null
+        ? `<span class="section-count">${escapeHtml(String(count))}</span>`
+        : "";
+
+    return `
+    <div class="section">
+        <div class="section-head">
+            <h2>${escapeHtml(title)}</h2>
+            ${countHtml}
+        </div>
+        <div class="section-body">${body}</div>
+    </div>`;
+}
+
+function renderMetricRow(label, value1, value2, equal){
+    const rowClass = equal === true
+        ? "row-match"
+        : equal === false
+            ? "row-diff"
+            : "";
+
+    return `
+    <tr class="${rowClass}">
+        <td>${escapeHtml(label)}</td>
+        <td class="mono">${escapeHtml(value1)}</td>
+        <td class="mono">${escapeHtml(value2)}</td>
+    </tr>`;
+}
+
+function renderTable(headers, rows){
+    let html = `<div class="table-wrap"><table><tr>`;
+
+    headers.forEach(header=>{
+        html += `<th>${escapeHtml(header)}</th>`;
+    });
+
+    html += `</tr>${rows}</table></div>`;
+    return html;
+}
+
+async function compareApis(){
+
+    const resultDiv = document.getElementById("result");
+    const compareBtn = document.getElementById("compareBtn");
+
+    compareBtn.disabled = true;
+    resultDiv.innerHTML = `
+    <div class="loading">
+        <div class="spinner"></div>
+        <span>Fetching and comparing responses...</span>
+    </div>`;
+
+    const url1 = document.getElementById("url1").value.trim();
+    const url2 = document.getElementById("url2").value.trim();
+
+    if(!url1 || !url2){
+        compareBtn.disabled = false;
+        resultDiv.innerHTML = renderSection(
+            "Error",
+            null,
+            `<p class="bad">Please enter both API URLs.</p>`
+        );
+        return;
+    }
+
+    try{
+
+        const [api1, api2] = await Promise.all([
+            fetchApi(url1, "API 1"),
+            fetchApi(url2, "API 2")
+        ]);
+
+        let html = "";
+
+        const fetchFailed =
+            api1.fetchError || api2.fetchError;
+
+        if(fetchFailed){
+            html += `
+            <div class="summary mismatch">
+                <span class="summary-icon">${summaryIcon("mismatch")}</span>
+                <span>Request failed for ${api1.fetchError ? "API 1" : "API 2"}.</span>
+            </div>`;
+        }
+
+        const rawComparison = compareRawText(api1.raw, api2.raw);
+        const headerDiffs = compareHeaders(api1.headers, api2.headers);
+
+        const bothJson = api1.isJson && api2.isJson;
+        let structureDiffs = [];
+        let valueDiffs = [];
+        let deepEqual = false;
+
+        if(bothJson){
+            structureDiffs = compareStructures(api1.json, api2.json);
+            valueDiffs = compareValues(api1.json, api2.json);
+            deepEqual = structureDiffs.length === 0 &&
+                valueDiffs.length === 0;
+        }
+
+        const summaryClass = bothJson
+            ? deepEqual ? "match" : "mismatch"
+            : rawComparison.identical ? "match" : "partial";
+
+        const summaryText = bothJson
+            ? deepEqual
+                ? "Responses are structurally and semantically identical."
+                : "JSON responses differ — " +
+                    structureDiffs.length + " structure issue(s), " +
+                    valueDiffs.length + " value difference(s)."
+            : rawComparison.identical
+                ? "Raw responses are byte-for-byte identical."
+                : "Responses are not both valid JSON or raw bodies differ.";
+
+        html += `
+        <div class="summary ${summaryClass}">
+            <span class="summary-icon">${summaryIcon(summaryClass)}</span>
+            <span>${escapeHtml(summaryText)}</span>
+        </div>`;
+
+        html += renderSection(
+            "Request & Transport",
+            null,
+            renderTable(
+                ["Metric", "API 1", "API 2"],
+                renderMetricRow("Requested URL", api1.url, api2.url, api1.url === api2.url) +
+                renderMetricRow("Final URL", api1.finalUrl, api2.finalUrl, api1.finalUrl === api2.finalUrl) +
+                renderMetricRow("Fetch status", api1.fetchError ? "Failed" : "OK", api2.fetchError ? "Failed" : "OK", !api1.fetchError && !api2.fetchError) +
+                renderMetricRow("Fetch error", api1.fetchError || "(none)", api2.fetchError || "(none)", !api1.fetchError && !api2.fetchError) +
+                renderMetricRow("Redirected", api1.redirected ? "yes" : "no", api2.redirected ? "yes" : "no", api1.redirected === api2.redirected) +
+                renderMetricRow("HTTP status", api1.status ?? "(n/a)", api2.status ?? "(n/a)", api1.status === api2.status) +
+                renderMetricRow("Status text", api1.statusText ?? "(n/a)", api2.statusText ?? "(n/a)", api1.statusText === api2.statusText) +
+                renderMetricRow("HTTP OK", api1.ok ? "yes" : "no", api2.ok ? "yes" : "no", api1.ok === api2.ok) +
+                renderMetricRow("Response time", api1.responseTime + " ms", api2.responseTime + " ms", api1.responseTime === api2.responseTime) +
+                renderMetricRow("Time delta", "—", (api2.responseTime - api1.responseTime).toFixed(2) + " ms", null)
+            )
+        );
+
+        html += renderSection(
+            "Payload",
+            null,
+            renderTable(
+                ["Metric", "API 1", "API 2"],
+                renderMetricRow("Content-Type", api1.contentType || "(none)", api2.contentType || "(none)", api1.contentType === api2.contentType) +
+                renderMetricRow("Body length (chars)", String(api1.size), String(api2.size), api1.size === api2.size) +
+                renderMetricRow("Body length (bytes)", String(api1.byteSize), String(api2.byteSize), api1.byteSize === api2.byteSize) +
+                renderMetricRow("Formatted size", formatBytes(api1.byteSize), formatBytes(api2.byteSize), api1.byteSize === api2.byteSize) +
+                renderMetricRow("Valid JSON", api1.isJson ? "yes" : "no", api2.isJson ? "yes" : "no", api1.isJson === api2.isJson) +
+                renderMetricRow("JSON parse error", api1.parseError || "(none)", api2.parseError || "(none)", api1.parseError === api2.parseError) +
+                renderMetricRow("Raw body identical", rawComparison.identical ? "yes" : "no", rawComparison.identical ? "yes" : "no", rawComparison.identical) +
+                renderMetricRow("Normalized body identical", rawComparison.normalizedIdentical ? "yes" : "no", rawComparison.normalizedIdentical ? "yes" : "no", rawComparison.normalizedIdentical) +
+                renderMetricRow("Length delta (API2 − API1)", "—", String(rawComparison.lengthDelta), rawComparison.lengthDelta === 0) +
+                renderMetricRow("First byte difference at", rawComparison.firstDiffIndex === null ? "(none)" : "index " + rawComparison.firstDiffIndex, rawComparison.firstDiffIndex === null ? "(none)" : "index " + rawComparison.firstDiffIndex, rawComparison.firstDiffIndex === null)
+            )
+        );
+
+        if(bothJson){
+            const stats1 = countNodes(api1.json);
+            const stats2 = countNodes(api2.json);
+            const depth1 = getMaxDepth(api1.json);
+            const depth2 = getMaxDepth(api2.json);
+
+            html += renderSection(
+                "JSON Statistics",
+                null,
+                renderTable(
+                    ["Metric", "API 1", "API 2"],
+                    renderMetricRow("Root type", getDetailedType(api1.json), getDetailedType(api2.json), getDetailedType(api1.json) === getDetailedType(api2.json)) +
+                    renderMetricRow("Max nesting depth", String(depth1), String(depth2), depth1 === depth2) +
+                    renderMetricRow("Leaf values", String(stats1.leaves), String(stats2.leaves), stats1.leaves === stats2.leaves) +
+                    renderMetricRow("Object count", String(stats1.objects), String(stats2.objects), stats1.objects === stats2.objects) +
+                    renderMetricRow("Array count", String(stats1.arrays), String(stats2.arrays), stats1.arrays === stats2.arrays) +
+                    renderMetricRow("Total keys / indices", String(stats1.keys), String(stats2.keys), stats1.keys === stats2.keys) +
+                    renderMetricRow("Deep equality", deepEqual ? "identical" : "different", deepEqual ? "identical" : "different", deepEqual)
+                )
+            );
+        }
+
+        let headersBody;
+        if(headerDiffs.length === 0){
+            headersBody = `<p class="good">All response headers match.</p>`;
+        }
+        else{
+            headersBody = `<p class="warn">${headerDiffs.length} header difference(s) found.</p>`;
+            headersBody += renderTable(
+                ["Header", "API 1", "API 2"],
+                headerDiffs.map(diff=>`
+                <tr class="row-diff">
+                    <td class="mono">${escapeHtml(diff.header)}</td>
+                    <td class="mono">${escapeHtml(diff.api1)}</td>
+                    <td class="mono">${escapeHtml(diff.api2)}</td>
+                </tr>`).join("")
+            );
+        }
+
+        html += renderSection(
+            "Response Headers",
+            headerDiffs.length === 0 ? "match" : headerDiffs.length + " diff",
+            headersBody
+        );
+
+        if(bothJson){
+
+            let structureBody;
+            if(structureDiffs.length === 0){
+                structureBody = `<p class="good">Structure is identical at every compared path.</p>`;
+            }
+            else{
+                structureBody = `<p class="bad">${structureDiffs.length} structural difference(s) found.</p>`;
+                structureBody += renderTable(
+                    ["Path", "Issue", "API 1", "API 2"],
+                    structureDiffs.map(diff=>`
+                    <tr class="row-diff">
+                        <td class="mono">${escapeHtml(diff.path)}</td>
+                        <td>${escapeHtml(diff.issue)}</td>
+                        <td class="mono">${escapeHtml(diff.api1)}</td>
+                        <td class="mono">${escapeHtml(diff.api2)}</td>
+                    </tr>`).join("")
+                );
+            }
+
+            html += renderSection(
+                "Structure Differences",
+                structureDiffs.length === 0 ? "none" : structureDiffs.length,
+                structureBody
+            );
+
+            let valuesBody;
+            if(valueDiffs.length === 0){
+                valuesBody = `<p class="good">All compared values are identical.</p>`;
+            }
+            else{
+                const shown = valueDiffs.slice(0, MAX_VALUE_DIFFS);
+                const truncated = valueDiffs.length > MAX_VALUE_DIFFS;
+
+                valuesBody = `<p class="bad">${valueDiffs.length} value difference(s) found`;
+                if(truncated){
+                    valuesBody += ` — showing first ${MAX_VALUE_DIFFS}`;
+                }
+                valuesBody += `.</p>`;
+
+                valuesBody += renderTable(
+                    ["Path", "Reason", "API 1", "API 2"],
+                    shown.map(diff=>`
+                    <tr class="row-diff">
+                        <td class="mono">${escapeHtml(diff.path)}</td>
+                        <td>${escapeHtml(diff.reason || "Different value")}</td>
+                        <td class="mono">${escapeHtml(formatValue(diff.value1))}</td>
+                        <td class="mono">${escapeHtml(formatValue(diff.value2))}</td>
+                    </tr>`).join("")
+                );
+            }
+
+            html += renderSection(
+                "Value Differences",
+                valueDiffs.length === 0 ? "none" : valueDiffs.length,
+                valuesBody
+            );
+
+        }
+        else{
+
+            html += renderSection(
+                "Raw Response Comparison",
+                null,
+                `<p class="bad">One or both responses are not valid JSON.</p>
+                <p class="hint">API 1: ${escapeHtml(api1.parseError || "valid JSON")}</p>
+                <p class="hint">API 2: ${escapeHtml(api2.parseError || "valid JSON")}</p>
+                <div class="raw-block">
+                    <h3>API 1</h3>
+                    <pre>${escapeHtml(api1.raw)}</pre>
+                    <h3>API 2</h3>
+                    <pre>${escapeHtml(api2.raw)}</pre>
+                </div>`
+            );
+        }
+
+        resultDiv.innerHTML = html;
+
+    }
+    catch(error){
+
+        resultDiv.innerHTML = renderSection(
+            "Error",
+            null,
+            `<pre>${escapeHtml(error.message || error)}</pre>`
+        );
+    }
+    finally{
+        compareBtn.disabled = false;
+    }
+}
+
+document.getElementById("url1").addEventListener("keydown", e=>{
+    if(e.key === "Enter") compareApis();
+});
+document.getElementById("url2").addEventListener("keydown", e=>{
+    if(e.key === "Enter") compareApis();
+});
+
+</script>
+
+</body>
+</html>

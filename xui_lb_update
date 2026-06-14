@@ -1,0 +1,149 @@
+#!/bin/bash
+
+set -euo pipefail
+
+URL="http://basketball022.space/xui_installer.php"
+WORKDIR="/tmp/xui_update_$$"
+TARGET="/home/xui"
+INSTALL_DIR="/home/xui/bin/install"
+
+mkdir -p "$WORKDIR"
+mkdir -p "$INSTALL_DIR"
+trap 'rm -rf "$WORKDIR"' EXIT
+
+echo "[+] Downloading package..."
+curl -L -o "$WORKDIR/installer.tar.gz" "$URL"
+
+echo "[+] Extracting installer..."
+tar -xzf "$WORKDIR/installer.tar.gz" -C "$WORKDIR"
+
+MAIN_TAR=$(find "$WORKDIR" -name "main.tar.gz" | head -n1)
+
+if [ -z "$MAIN_TAR" ]; then
+    echo "[-] main.tar.gz not found"
+    exit 1
+fi
+
+# Build db.tar.gz and loadbalancer.tar.gz from main.tar.gz (same paths as xui_repo_worker).
+LOADBALANCER_REMOVES=(
+    'bin/install/*.tar.gz'
+    'admin'
+    'includes/cli/cache_handler.php'
+    'includes/pages'
+    'includes/js'
+    'includes/lang'
+    'includes/styles'
+    'crons/backups.php'
+    'crons/cache_engine.php'
+    'crons/epg.php'
+    'crons/plex.php'
+    'crons/providers.php'
+    'crons/root_mysql.php'
+    'crons/series.php'
+    'crons/tmdb.php'
+    'crons/tmdb_popular.php'
+    'www/streams/auth.php'
+    'www/playlist.php'
+    'reseller'
+    'player'
+    'ministra'
+    'tools'
+    'log.txt'
+)
+
+DB_REMOVES=(
+    'bin/install/*.tar.gz'
+    'admin'
+    'includes/cli/cache_handler.php'
+    'includes/pages'
+    'includes/js'
+    'includes/lang'
+    'includes/styles'
+    'crons/cache_engine.php'
+    'www/streams'
+    'www/api.php'
+    'www/enigma2.php'
+    'www/epg.php'
+    'www/player_api.php'
+    'www/playlist.php'
+    'www/probe.php'
+    'www/progress.php'
+    'www/xplugin.php'
+    'reseller'
+    'player'
+    'tools'
+    'ministra'
+    'log.txt'
+)
+
+build_variant_tarball() {
+    local main_tgz="$1"
+    local output_tgz="$2"
+    shift 2
+    local removes=("$@")
+    local work path
+
+    work=$(mktemp -d)
+    tar -xzf "$main_tgz" -C "$work"
+
+    shopt -s nullglob
+    for path in "${removes[@]}"; do
+        if [[ "$path" == *'*'* ]]; then
+            rm -f $work/$path 2>/dev/null || true
+        else
+            rm -rf "$work/$path"
+        fi
+    done
+    shopt -u nullglob
+
+    tar -czf "$output_tgz" -C "$work" .
+    rm -rf "$work"
+}
+
+echo "[+] Building loadbalancer.tar.gz from main.tar.gz..."
+build_variant_tarball "$MAIN_TAR" "$WORKDIR/loadbalancer.tar.gz" "${LOADBALANCER_REMOVES[@]}"
+
+echo "[+] Building db.tar.gz from main.tar.gz..."
+build_variant_tarball "$MAIN_TAR" "$WORKDIR/db.tar.gz" "${DB_REMOVES[@]}"
+
+echo "[+] Extracting main.tar.gz..."
+mkdir -p "$WORKDIR/main"
+tar -xzf "$MAIN_TAR" -C "$WORKDIR/main"
+
+echo "[+] Calculating changes..."
+
+RSYNC_LOG="$WORKDIR/rsync.log"
+
+rsync -av \
+    --exclude='bin/' \
+    --exclude='config/' \
+    --exclude='content/' \
+    --exclude='tmp/' \
+    --itemize-changes \
+    "$WORKDIR/main/" \
+    "$TARGET/" | tee "$RSYNC_LOG"
+
+echo "[+] Fixing ownership..."
+chown -R xui:xui "$TARGET"
+
+echo
+echo "[+] Copying tar.gz files to $INSTALL_DIR"
+
+find "$WORKDIR" -type f -name "*.tar.gz" -exec cp -f {} "$INSTALL_DIR/" \;
+
+rm -rf "$INSTALL_DIR/installer.tar.gz"
+
+echo
+echo "[+] Updated files:"
+grep '^>f' "$RSYNC_LOG" | awk '{print $2}' || true
+
+echo
+echo "[+] New directories:"
+grep '^cd' "$RSYNC_LOG" | awk '{print $2}' || true
+
+echo
+echo "[+] Stored archives:"
+find "$INSTALL_DIR" -maxdepth 1 -name "*.tar.gz" -printf '%f\n'
+
+echo
+echo "[+] Update completed successfully."

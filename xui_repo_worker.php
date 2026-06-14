@@ -79,7 +79,7 @@ function buildDeleteCmd(array $paths): string {
     $rmF = [];
     foreach ($paths as $path) {
         if (strpos($path, '*') !== false) {
-            $rmF[] = escapeshellarg($path);
+            $rmF[] = $path;
         } else {
             $rmRf[] = escapeshellarg($path);
         }
@@ -162,16 +162,24 @@ cd /home/xui && \
 sudo git fetch --all && \
 sudo git checkout ubuntu20 && \
 sudo git pull && \
-if [ ! -d /home/xui_lb/.git ]; then sudo git worktree add /home/xui_lb lb_sk; fi && \
-if [ ! -d /home/xui_db/.git ]; then sudo git worktree add /home/xui_db db_sk; fi && \
+if ! sudo git -C /home/xui_lb rev-parse --git-dir >/dev/null 2>&1; then \
+  if [ -e /home/xui_lb ]; then echo 'ERROR: /home/xui_lb exists but is not a git worktree' >&2; exit 1; fi; \
+  sudo git worktree add /home/xui_lb lb_sk; \
+fi && \
+if ! sudo git -C /home/xui_db rev-parse --git-dir >/dev/null 2>&1; then \
+  if [ -e /home/xui_db ]; then echo 'ERROR: /home/xui_db exists but is not a git worktree' >&2; exit 1; fi; \
+  sudo git worktree add /home/xui_db db_sk; \
+fi && \
 sudo rsync -a --delete --filter='protect .git/' --exclude='.git' --exclude='bin/install/*.tar.gz' /home/xui/ /home/xui_lb/ && \
 sudo rsync -a --delete --filter='protect .git/' --exclude='.git' --exclude='bin/install/*.tar.gz' /home/xui/ /home/xui_db/ && \
 cd /home/xui_lb && \
+sudo git checkout lb_sk && \
 sudo $deleteCmd && \
 sudo git add -A && \
 (sudo git diff --cached --quiet || sudo git commit -m '$commitMsg') && \
 sudo git push origin lb_sk && \
 cd /home/xui_db && \
+sudo git checkout db_sk && \
 sudo $deleteCmd1 && \
 sudo git add -A && \
 (sudo git diff --cached --quiet || sudo git commit -m '$commitMsg') && \
